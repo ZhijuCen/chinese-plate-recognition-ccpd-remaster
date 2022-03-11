@@ -34,9 +34,10 @@ class KeypointModelContainer(ModelContainer):
     
     def export_onnx(self, path: Union[Path, str]):
         self.model.eval()
+        self.model.cpu()
         input_names = ["x"]
         output_names = ["boxes", "labels", "keypoints"]
-        example_input = [torch.rand(3, 300, 500), torch.rand(3, 400, 400)]
+        example_input = [torch.rand(3, 320, 640), torch.rand(3, 480, 480)]
         torch.onnx.export(
             self.model, example_input, str(path),
             input_names=input_names,
