@@ -9,8 +9,9 @@ def default_keypoint_transform(
     kp_params = A.KeypointParams(kp_format)
     compose = A.Compose([
         A.InvertImg(),
+        A.ToGray(),
         A.ShiftScaleRotate(),
         A.Perspective(),
-        A.ToGray(),
+        A.Flip(),
     ], bbox_params=bbox_params, keypoint_params=kp_params)
     return compose

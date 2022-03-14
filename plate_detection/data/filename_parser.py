@@ -1,6 +1,8 @@
 
 import numpy as np
-from typing import List, Optional, Tuple, Dict, Any
+from typing import Any, Dict, List, Tuple, Union, Optional
+from pathlib import Path
+from os import path
 
 
 def load_char_annots(path: str) -> dict:
@@ -30,17 +32,19 @@ def remap_ccpd_lp_annot(
 
 
 def parse_ccpd_filename(
-    filename: str,
-    remap_lp_annot: Optional[dict] = None
+    filepath: str,
+    remap_lp_annot: Optional[Dict[str, Any]] = None
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, Dict[str, Any]]:
-    stem, _ = filename.rsplit(".")
+    filename = path.split(filepath)[-1]
+    stem = filename.rsplit(".")[-2]
     (area, tilt, bbox, keypoints, lp_number,
      brightness, blurriness
     ) = stem.split("-")
     area = float(f"0.{area}")
     tilt = np.array([v for v in tilt.split("_")], dtype=np.int64)
-    bbox = np.array([s.split("&") for s in bbox.split("_")], dtype=np.int64)
+    bbox = np.array([("&".join(bbox.split("_"))).split("&")], dtype=np.int64)
     keypoints = np.array([s.split("&") for s in keypoints.split("_")], dtype=np.int64)
+    keypoints = np.concatenate((keypoints, np.ones((keypoints.shape[0], 1))), axis=1)
     lp_number = [int(v) for v in lp_number.split("_")]
     brightness = int(brightness)
     blurriness = int(blurriness)
@@ -57,3 +61,24 @@ def parse_ccpd_filename(
         {"area": area, "tilt": tilt,
          "brightness": brightness, "blurriness": blurriness}
     )
+
+
+def get_dataset_from_split_file(dataset_dir: Union[Path, str],
+                                split_file_path: Union[Path, str],
+                                label: int = 0,
+                                remap_lp_annot: Optional[Dict[str, Any]] = None
+) -> Tuple[List[str], List[np.ndarray], List[np.ndarray], List[np.ndarray], List[np.ndarray]]:
+    dataset_dir: Path = Path(dataset_dir)
+    with open(split_file_path, "rt") as f:
+        img_pathes, boxes, labels, keypoints, license_plate_annots = (
+            list(), list(), list(), list(), list())
+        for line in f:
+            img_path = (dataset_dir / line.rstrip("\r\n ")).resolve()
+            img_path = str(img_path)
+            bbox, kp, lp, _ = parse_ccpd_filename(img_path, remap_lp_annot)
+            img_pathes.append(img_path)
+            boxes.append(bbox)
+            labels.append(np.full((bbox.shape[0],), label))
+            keypoints.append(kp)
+            license_plate_annots.append(lp)
+    return img_pathes, boxes, labels, keypoints, license_plate_annots
