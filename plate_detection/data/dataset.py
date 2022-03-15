@@ -57,7 +57,7 @@ class ImageDataset(Dataset):
                                  transformed["keypoints"])
         boxes, labels, _ = np.split(boxes, [4, 5], axis=1)
         labels = labels.squeeze()
-        keypoints = np.array(keypoints).reshape((kp_n, kp_k, kp_d))
+        keypoints = np.asarray(keypoints).reshape((kp_n, kp_k, kp_d))
 
         img_h, img_w = img.shape[:2]
         kp_isin_img = (
