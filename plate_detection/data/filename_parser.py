@@ -43,8 +43,8 @@ def parse_ccpd_filename(
     area = float(f"0.{area}")
     tilt = np.array([v for v in tilt.split("_")], dtype=np.int64)
     bbox = np.array([("&".join(bbox.split("_"))).split("&")], dtype=np.int64)
-    keypoints = np.array([s.split("&") for s in keypoints.split("_")], dtype=np.int64)
-    keypoints = np.concatenate((keypoints, np.ones((keypoints.shape[0], 1))), axis=1)
+    keypoints = np.array([[s.split("&") for s in keypoints.split("_")]], dtype=np.int64)
+    keypoints = np.concatenate((keypoints, np.ones((*keypoints.shape[:2], 1))), axis=2)
     lp_number = [int(v) for v in lp_number.split("_")]
     brightness = int(brightness)
     blurriness = int(blurriness)

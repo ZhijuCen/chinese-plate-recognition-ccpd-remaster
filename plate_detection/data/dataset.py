@@ -47,20 +47,30 @@ class ImageDataset(Dataset):
         boxes: np.ndarray = self.boxes[item]
         boxes = np.concatenate((boxes, np.expand_dims(labels, 1)), axis=1)
         keypoints: np.ndarray = self.keypoints[item]
-        keypoints, visibility, _ = np.split(keypoints, [2, 3], axis=1)
+        keypoints, visibility, _ = np.split(keypoints, [2, 3], axis=2)
+        kp_n, kp_k, kp_d = keypoints.shape
+        keypoints = keypoints.reshape((kp_n * kp_k, kp_d))
 
         transformed = self.transform(image=img, bboxes=boxes, keypoints=keypoints)
         img, boxes, keypoints = (transformed["image"],
                                  transformed["bboxes"],
                                  transformed["keypoints"])
         boxes, labels, _ = np.split(boxes, [4, 5], axis=1)
-        labels = labels.squeeze(-1)
+        labels = labels.squeeze()
+        keypoints = np.array(keypoints).reshape((kp_n, kp_k, kp_d))
+
+        img_h, img_w = img.shape[:2]
+        kp_isin_img = (
+            (np.greater_equal(keypoints[..., 0], 0) & np.less_equal(keypoints[..., 0], img_w))
+            & (np.greater_equal(keypoints[..., 1], 0) & np.less_equal(keypoints[..., 1], img_h))
+        )
+        visibility = np.expand_dims(kp_isin_img, axis=-1).astype(np.float32)
 
         img = torch.tensor(img, dtype=torch.float32) / 255.
         img = img.permute(2, 0, 1)
         labels = torch.tensor(labels, dtype=torch.int64)
         boxes = torch.tensor(boxes, dtype=torch.float32)
-        keypoints = torch.tensor(np.concatenate((keypoints, visibility), axis=1), dtype=torch.float32)
+        keypoints = torch.tensor(np.concatenate((keypoints, visibility), axis=2), dtype=torch.float32)
 
         return img, {"boxes": boxes, "labels": labels, "keypoints": keypoints}
 
@@ -82,8 +92,10 @@ class ImageCollate(object):
 
 
 def default_loader(img_paths, labels, boxes, keypoints,
-                   batch_size=16, shuffle=True, num_workers=0) -> DataLoader:
-    ds = ImageDataset(img_paths, labels, boxes, keypoints)
+                   batch_size=16, shuffle=True, num_workers=0,
+                   transform_apply_p=0.5) -> DataLoader:
+    transform = default_keypoint_transform(p=transform_apply_p)
+    ds = ImageDataset(img_paths, labels, boxes, keypoints, transform)
     loader = DataLoader(ds, batch_size,
                         shuffle=shuffle, num_workers=num_workers,
                         collate_fn=ImageCollate.collate_fn)
