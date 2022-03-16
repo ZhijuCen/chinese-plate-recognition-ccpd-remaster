@@ -1,17 +1,24 @@
 
 import torch
 from torch import nn, optim
+from torch.nn.utils import prune
 from torch.utils.data import DataLoader
 from torchvision.models.detection import keypointrcnn_resnet50_fpn
 
+from tqdm.auto import tqdm
+
 from pathlib import Path
-from typing import Optional, Union, Type, Any
+from typing import Optional, Union, Type, Any, List, Dict
 from abc import ABC
 
 
 class ModelContainer(ABC):
 
     def train(self, *args, **kwargs): return
+
+    def predict(self, *args, **kwargs) -> Any: return
+
+    def prune_model(self, amount_map: Dict[Type, float]) -> None: return
 
     def export_onnx(self, path: Union[Path, str]): return
 
@@ -22,14 +29,31 @@ class KeypointModelContainer(ModelContainer):
 
     def __init__(
         self, model: nn.Module,
-        opt: Type[optim.Optimizer], opt_default_params: dict = dict(lr=1e-3)
+        opt: Type[optim.Optimizer] = optim.SGD,
+        opt_default_params: dict = dict(lr=1e-3)
     ):
         self.model = model
         self.opt_default_params = opt_default_params
         self.opt = opt(self.model.parameters(), self.opt_default_params)
 
-    def train(self, loader: DataLoader):
-        return
+    def train(self, loader: DataLoader, epochs: int):
+        self.model.train()
+        for e in tqdm(range(epochs), desc="Training Epoch: ", position=0):
+            for images, targets in tqdm(loader, leave=False, position=1):
+                pass
+
+    def predict(self, images: Union[List[torch.Tensor], torch.Tensor]):
+        self.model.eval()
+        return self.model(images)
+
+    def prune_model(self, amount_map: Dict[Type, float] = {
+        nn.Conv2d: 0.2,
+        nn.Linear: 0.2,
+        }):
+        for _, module in self.model.named_modules():
+            for k, v in amount_map.items():
+                if isinstance(module, k):
+                    prune.l1_unstructured(module, "weight", amount=v)
 
     def save_optimizer(self, path: Union[Path, str]):
         saved_dict = {
