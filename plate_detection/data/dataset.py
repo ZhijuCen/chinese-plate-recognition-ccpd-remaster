@@ -2,7 +2,7 @@
 from .augmentation import default_keypoint_transform
 
 import torch
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import Dataset, DataLoader, ConcatDataset
 import albumentations as A
 
 import cv2 as cv
@@ -56,7 +56,7 @@ class ImageDataset(Dataset):
                                  transformed["bboxes"],
                                  transformed["keypoints"])
         boxes, labels, _ = np.split(boxes, [4, 5], axis=1)
-        labels = labels.squeeze()
+        labels = labels.squeeze(0)
         keypoints = np.asarray(keypoints).reshape((kp_n, kp_k, kp_d))
 
         img_h, img_w = img.shape[:2]
@@ -91,8 +91,13 @@ class ImageCollate(object):
         return
 
 
+def concat_ds(*ds: Dataset):
+    ds = ConcatDataset(list(ds))
+    return ds
+
+
 def default_loader(img_paths, labels, boxes, keypoints,
-                   batch_size=16, shuffle=True, num_workers=0,
+                   batch_size=4, shuffle=True, num_workers=0,
                    transform_apply_p=0.5) -> DataLoader:
     transform = default_keypoint_transform(p=transform_apply_p)
     ds = ImageDataset(img_paths, labels, boxes, keypoints, transform)

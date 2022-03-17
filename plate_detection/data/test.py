@@ -40,7 +40,7 @@ class TestDatasetAndLoader(unittest.TestCase):
     def setUp(self):
         self.test_suite_path = Path(__file__).parents[2] / "test_suite"
         self.test_filelist_path = self.test_suite_path / "val_for_test.txt"
-        annot_path = Path(__file__).parent.parent.parent / "char-annotations.yaml"
+        annot_path = Path(__file__).parents[2] / "char-annotations.yaml"
         self.annot_obj = load_char_annots(annot_path)
 
     def test_init_loader_noerror(self):
