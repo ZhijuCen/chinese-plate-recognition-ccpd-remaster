@@ -47,12 +47,13 @@ class TestDatasetAndLoader(unittest.TestCase):
         raised = False
         msg = ""
         try:
-            img_paths, boxes, labels, kps, lpas = get_dataset_from_split_file(
+            img_paths, boxes, labels, kps, lpas = parse_split_file_to_arrays(
                 self.test_suite_path,
                 self.test_filelist_path,
                 0, self.annot_obj)
-            loader = default_loader(img_paths, labels, boxes, kps,
-                                    transform_apply_p=1.)
+            dataset = get_dataset(img_paths, labels, boxes, kps, 1.)
+            dataset = concat_ds(dataset, dataset)
+            loader = get_loader(dataset)
             for imgs, targets in loader:
                 continue
         except:

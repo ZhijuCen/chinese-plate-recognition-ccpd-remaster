@@ -63,11 +63,13 @@ def parse_ccpd_filename(
     )
 
 
-def get_dataset_from_split_file(dataset_dir: Union[Path, str],
-                                split_file_path: Union[Path, str],
-                                label: int = 0,
-                                remap_lp_annot: Optional[Dict[str, Any]] = None
-) -> Tuple[List[str], List[np.ndarray], List[np.ndarray], List[np.ndarray], List[np.ndarray]]:
+def parse_split_file_to_arrays(
+    dataset_dir: Union[Path, str],
+    split_file_path: Union[Path, str],
+    label: int = 0,
+    remap_lp_annot: Optional[Dict[str, Any]] = None
+) -> Tuple[List[str],
+    List[np.ndarray], List[np.ndarray], List[np.ndarray], List[np.ndarray]]:
     dataset_dir: Path = Path(dataset_dir)
     with open(split_file_path, "rt") as f:
         img_pathes, boxes, labels, keypoints, license_plate_annots = (

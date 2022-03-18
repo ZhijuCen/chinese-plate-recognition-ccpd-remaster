@@ -1,5 +1,6 @@
 
-from .data import load_char_annots, default_loader, get_dataset_from_split_file
+from .data import (load_char_annots, get_loader,
+                   parse_split_file_to_arrays, concat_ds, get_dataset)
 from .model import KeypointRCNNContainer
 
 from pathlib import Path
@@ -17,11 +18,13 @@ class TestTrainingModel(unittest.TestCase):
         annot_path = Path(__file__).parents[1] / "char-annotations.yaml"
         self.annot_obj = load_char_annots(annot_path)
 
-        img_paths, boxes, labels, kps, lpas = get_dataset_from_split_file(
+        img_paths, boxes, labels, kps, lpas = parse_split_file_to_arrays(
             self.test_suite_path,
             self.test_filelist_path,
             0, self.annot_obj)
-        self.data_loader = default_loader(img_paths, labels, boxes, kps)
+        dataset = get_dataset(img_paths, labels, boxes, kps, 1.)
+        dataset = concat_ds(dataset, dataset)
+        self.data_loader = get_loader(dataset)
         self.model = KeypointRCNNContainer.new_keypointrcnn_resnet50_fpn(device="cuda")
 
         self.onnx_export_path = Path(__file__).parent.joinpath("model.onnx")

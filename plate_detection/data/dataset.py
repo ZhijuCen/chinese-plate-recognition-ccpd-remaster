@@ -91,17 +91,21 @@ class ImageCollate(object):
         return
 
 
-def concat_ds(*ds: Dataset):
+def get_dataset(img_paths, labels, boxes, keypoints,
+                transform_apply_p=0.5) -> ImageDataset:
+    transform = default_keypoint_transform(p=transform_apply_p)
+    return ImageDataset(img_paths, labels, boxes, keypoints, transform)
+
+
+def concat_ds(*ds: Dataset) -> ConcatDataset:
     ds = ConcatDataset(list(ds))
     return ds
 
 
-def default_loader(img_paths, labels, boxes, keypoints,
-                   batch_size=4, shuffle=True, num_workers=0,
-                   transform_apply_p=0.5) -> DataLoader:
-    transform = default_keypoint_transform(p=transform_apply_p)
-    ds = ImageDataset(img_paths, labels, boxes, keypoints, transform)
-    loader = DataLoader(ds, batch_size,
+def get_loader(
+    dataset,
+    batch_size=4, shuffle=True, num_workers=0) -> DataLoader:
+    loader = DataLoader(dataset, batch_size,
                         shuffle=shuffle, num_workers=num_workers,
                         collate_fn=ImageCollate.collate_fn)
     return loader

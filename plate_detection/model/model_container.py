@@ -91,7 +91,7 @@ class KeypointRCNNContainer(AbstractModelContainer):
                 total_loss += summed_loss.item()
                 self.opt.step()
             if val_loader is not None:
-                self.validation(val_loader)
+                val_loss = self.validation(val_loader)
             total_loss /= max(len(loader), 1)
             self.logger.info(f"Epoch: {e}, loss: {total_loss:.4f}")
 
@@ -142,6 +142,10 @@ class KeypointRCNNContainer(AbstractModelContainer):
         else:
             self.logger.error(f"Attempting load state-dict of"
                               f" {opt_class_string} for {self.opt.__class__}")
+            try:
+                self.opt.load_state_dict(loaded_dict["state_dict"])
+            except:
+                pass
 
     def load_model_state_dict(self, path: Union[Path, str]):
         loaded_dict = torch.load(str(path))
