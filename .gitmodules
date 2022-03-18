@@ -1,4 +1,4 @@
 [submodule "third_party/CCPD"]
 	path = third_party/CCPD
-	url = https://github.com/detectRecog/CCPD.git
+	url = https://github.com/ZhijuCen/CCPD.git
 	branch = master
