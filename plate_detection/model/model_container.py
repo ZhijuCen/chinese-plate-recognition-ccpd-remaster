@@ -14,6 +14,12 @@ from typing import Optional, Union, Type, Any, List, Dict
 from abc import ABC
 
 
+optimizer_map = {
+    "SGD": torch.optim.SGD,
+    "Adam": torch.optim.Adam,
+}
+
+
 class AbstractModelContainer(ABC):
 
     def train(self, *args, **kwargs): return

@@ -1,9 +1,12 @@
 
-from argparse import ArgumentParser
+import data
+from model import KeypointRCNNContainer
+
+from argparse import ArgumentParser, Namespace
 from pathlib import Path
 
 
-def main(args):
+def main(args: Namespace):
     return
 
 
@@ -33,3 +36,21 @@ if __name__ == "__main__":
         "--val-mapping", nargs="*", type=int,
         help="Index mapping from val split index to index of datasets."
     )
+    parser.add_argument(
+        "--optimizer", choices=["SGD", "Adam"], default="SGD",
+        help="Optimizer for training."
+    )
+    parser.add_argument(
+        "--optimizer-params", nargs="+", default="lr=1e-3",
+        help="Parameters for optimizer."
+    )
+    parser.add_argument(
+        "--epochs", type=int, default=5,
+        help="Train epochs, default: %(default)s"
+    )
+    parser.add_argument(
+        "--annot-file", default="../char-annotations.yaml",
+        help="Location of Character Annotation map."
+    )
+    args = parser.parse_args()
+    main(args)
