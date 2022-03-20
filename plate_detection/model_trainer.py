@@ -41,7 +41,7 @@ if __name__ == "__main__":
         help="Optimizer for training."
     )
     parser.add_argument(
-        "--optimizer-params", nargs="+", default="lr=1e-3",
+        "--optimizer-params", nargs="+", default=["lr=1e-3"],
         help="Parameters for optimizer."
     )
     parser.add_argument(
@@ -49,8 +49,9 @@ if __name__ == "__main__":
         help="Train epochs, default: %(default)s"
     )
     parser.add_argument(
-        "--annot-file", default="../char-annotations.yaml",
+        "--annot-file", type=Path, default="../char-annotations.yaml",
         help="Location of Character Annotation map."
     )
     args = parser.parse_args()
+    print(args)
     main(args)

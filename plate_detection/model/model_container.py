@@ -5,6 +5,8 @@ from torch.nn.utils import prune
 from torch.utils.data import DataLoader
 from torchvision.models.detection import keypointrcnn_resnet50_fpn
 
+from torchmetrics.detection.map import MeanAveragePrecision
+
 from tqdm.auto import tqdm
 
 import sys
@@ -69,7 +71,7 @@ class KeypointRCNNContainer(AbstractModelContainer):
 
         # Args for keypointrcnn_resnet_fpn initialzation.
         pretrained: bool = False, progress: bool = True,
-        num_classes: int = 1, num_keypoints: int = 4,
+        num_classes: int = 2, num_keypoints: int = 4,
         pretrained_backbone: bool = True,
         trainable_backbone_layers: Optional[Any] = None, **kwargs: Any
     ):
@@ -97,38 +99,36 @@ class KeypointRCNNContainer(AbstractModelContainer):
                 total_loss += summed_loss.item()
                 self.opt.step()
             if val_loader is not None:
-                val_loss = self.validation(val_loader)
+                val_summary = self.validation(val_loader)
+                self.logger.info(val_summary)
             total_loss /= max(len(loader), 1)
             self.logger.info(f"Epoch: {e}, loss: {total_loss:.4f}")
 
-    def validation(self, loader: DataLoader) -> float:
-        self.model.train()
+    def validation(self, loader: DataLoader):
+        self.model.eval()
+        mean_average_precision = MeanAveragePrecision()
+        mean_average_precision.to(self.device)
         with torch.no_grad():
-            total_loss = 0.
             for images, targets in tqdm(loader, desc="Validating batch: "):
                 images = [i.to(self.device) for i in images]
                 targets = [{k: v.to(self.device) for k, v in t.items()} for t in targets]
-                losses: Dict[str, torch.FloatTensor] = self.model(images, targets)
-                summed_loss = 0.
-                for _, v in losses.items():
-                    summed_loss += v
-                total_loss += summed_loss.item()
-            total_loss /= max(len(loader), 1)
-        self.logger.info(f"Validation loss: {total_loss:.4f}")
-        return total_loss
+                prediction: List[Dict[str, torch.Tensor]] = self.model(images)
+                mean_average_precision.update(prediction, targets)
+        summary = mean_average_precision.compute()
+        return summary
 
     def predict(self, images: List[torch.Tensor]):
         self.model.eval()
         return self.model(images)
 
     def prune_model(self, amount_map: Dict[Type[nn.Module], float] = {
-        nn.Conv2d: 0.2,
-        nn.Linear: 0.2,
+        nn.Conv2d: 0.3,
         }):
         for _, module in self.model.named_modules():
             for k, v in amount_map.items():
                 if isinstance(module, k):
                     prune.l1_unstructured(module, "weight", amount=v)
+                    prune.remove(module, "weight")
 
     def save_optimizer(self, path: Union[Path, str]):
         saved_dict = {
