@@ -10,7 +10,7 @@ import logging
 logging.basicConfig(level=logging.NOTSET)
 
 
-class TestTrainingModel(unittest.TestCase):
+class TestTrainingKeypointRCNN(unittest.TestCase):
 
     def setUp(self) -> None:
         self.test_suite_path = Path(__file__).parents[1] / "test_suite"
@@ -25,7 +25,7 @@ class TestTrainingModel(unittest.TestCase):
         dataset = get_dataset(img_paths, labels, boxes, kps, 1.)
         dataset = concat_ds(dataset, dataset)
         self.data_loader = get_loader(dataset)
-        self.model = KeypointRCNNContainer.new_keypointrcnn_resnet50_fpn(device="cuda")
+        self.model = KeypointRCNNContainer.new_model(device="cuda")
 
         self.onnx_export_path = Path(__file__).parent.joinpath("model.onnx")
         self.model_state_dict_path = Path(__file__).parent.joinpath("model.pt")
