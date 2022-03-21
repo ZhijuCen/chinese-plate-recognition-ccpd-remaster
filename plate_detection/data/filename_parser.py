@@ -72,15 +72,15 @@ def parse_split_file_to_arrays(
     List[np.ndarray], List[np.ndarray], List[np.ndarray], List[np.ndarray]]:
     dataset_dir: Path = Path(dataset_dir)
     with open(split_file_path, "rt") as f:
-        img_pathes, boxes, labels, keypoints, license_plate_annots = (
+        img_paths, boxes, labels, keypoints, license_plate_annots = (
             list(), list(), list(), list(), list())
         for line in f:
             img_path = (dataset_dir / line.rstrip("\r\n ")).resolve()
             img_path = str(img_path)
             bbox, kp, lp, _ = parse_ccpd_filename(img_path, remap_lp_annot)
-            img_pathes.append(img_path)
+            img_paths.append(img_path)
             boxes.append(bbox)
             labels.append(np.full((bbox.shape[0],), label))
             keypoints.append(kp)
             license_plate_annots.append(lp)
-    return img_pathes, boxes, labels, keypoints, license_plate_annots
+    return img_paths, boxes, labels, keypoints, license_plate_annots
