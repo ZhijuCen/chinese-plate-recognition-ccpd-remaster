@@ -1,7 +1,7 @@
 
 from .data import (load_char_annots, get_loader,
                    parse_split_file_to_arrays, concat_ds, get_dataset)
-from .model import KeypointRCNNContainer
+from .model import KeypointRCNNContainer, SSDLiteContainer
 
 from pathlib import Path
 import unittest
@@ -51,6 +51,47 @@ class TestTrainingKeypointRCNN(unittest.TestCase):
             fhdlr: logging.FileHandler = self.model.logger.handlers[0]
             Path(fhdlr.baseFilename).unlink(missing_ok=True)
 
+        except:
+            msg = traceback.format_exc()
+            raised = True
+        self.assertFalse(raised, msg)
+
+
+class TestTrainingSSDLite(unittest.TestCase):
+
+    def setUp(self) -> None:
+        self.test_suite_path = Path(__file__).parents[1] / "test_suite"
+        self.test_filelist_path = self.test_suite_path / "val_for_test.txt"
+        annot_path = Path(__file__).parents[1] / "char-annotations.yaml"
+        self.annot_obj = load_char_annots(annot_path)
+
+        img_paths, boxes, labels, kps, lpas = parse_split_file_to_arrays(
+            self.test_suite_path,
+            self.test_filelist_path,
+            1, self.annot_obj)
+        dataset = get_dataset(img_paths, labels, boxes, kps, 1.)
+        dataset = concat_ds(dataset, dataset)
+        self.data_loader = get_loader(dataset)
+        self.model = SSDLiteContainer.new_model(device="cuda", runtime_output_dir="output-test")
+
+    def tearDown(self) -> None:
+        pass
+
+    def test_train_noerror(self):
+        raised = False
+        msg = ""
+        try:
+            self.model.train(self.data_loader, 4)
+            self.model.prune_model()
+            self.model.export_onnx()
+
+            fhdlr: logging.FileHandler = self.model.logger.handlers[0]
+
+            Path(fhdlr.baseFilename).unlink(missing_ok=True)
+            (self.model.runtime_output_dir / "best.pt").unlink(missing_ok=True)
+            (self.model.runtime_output_dir / "latest.pt").unlink(missing_ok=True)
+            (self.model.runtime_output_dir / "model.onnx").unlink(missing_ok=True)
+            self.model.runtime_output_dir.rmdir()
         except:
             msg = traceback.format_exc()
             raised = True

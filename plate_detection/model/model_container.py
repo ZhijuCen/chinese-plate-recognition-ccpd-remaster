@@ -1,8 +1,10 @@
 
+from ..data import get_loader
+
 import torch
 from torch import nn, optim
 from torch.nn.utils import prune
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, Subset
 from torchvision.models.detection import (keypointrcnn_resnet50_fpn,
                                           ssdlite320_mobilenet_v3_large)
 
@@ -53,7 +55,7 @@ class SSDLiteContainer(AbstractModelContainer):
         device: Union[torch.device, str, int] = "cpu",
         dtype: torch.dtype = torch.float32,
         runtime_output_dir: Union[str, Path, None] = None,
-        use_checkpoint: bool = False,
+        load_checkpoint_on_init: bool = False,
     ):
         self.device = (torch.device(device)
                        if torch.cuda.is_available()
@@ -66,14 +68,14 @@ class SSDLiteContainer(AbstractModelContainer):
         self.runtime_output_dir = runtime_output_dir
         if self.runtime_output_dir is None:
             init_datetime = tuple(dt.now().timetuple())[:6]
-            self.runtime_output_dir = Path(
+            self.runtime_output_dir: Path = Path(
                 ("output-{:04d}{:02d}{:02d}"
                  "{:02d}{:02d}{:02d}").format(*init_datetime))
         else:
-            self.runtime_output_dir = Path(self.runtime_output_dir)
+            self.runtime_output_dir: Path = Path(self.runtime_output_dir)
+            if load_checkpoint_on_init:
+                self.load_checkpoint()
         self.runtime_output_dir.mkdir(parents=True, exist_ok=True)
-
-        self.use_checkpoint = use_checkpoint
 
         self.logger = init_logger(self.__class__, self.runtime_output_dir / "logs.log")
 
@@ -97,6 +99,12 @@ class SSDLiteContainer(AbstractModelContainer):
 
     def train(self, loader: DataLoader, epochs: int,
               val_loader: Optional[DataLoader] = None):
+
+        if val_loader is None:
+            val_ds = Subset(loader.dataset,
+                            list(range(max(1, len(loader.dataset) // 10))))
+            val_loader = get_loader(val_ds, 4, shuffle=False, num_workers=6)
+
         for e in tqdm(range(epochs), desc="Epoch: ", position=0):
             self.model.train()
             total_loss = 0.
@@ -113,11 +121,21 @@ class SSDLiteContainer(AbstractModelContainer):
                 summed_loss.backward()
                 total_loss += summed_loss.item()
                 self.opt.step()
-            if val_loader is not None:
-                val_summary = self.validation(val_loader)
-                self.logger.info(val_summary)
+
             total_loss /= max(len(loader), 1)
             self.logger.info(f"Epoch: {e}, loss: {total_loss:.4f}")
+
+            val_summary = self.validation(val_loader)
+            self.logger.info(f"mAp in val set: {val_summary['map']}")
+
+            self.save_checkpoint(val_summary["map"])
+            best = self.read_checkpoint()
+            if best is not None:
+                best_mAp = best["mAp"]
+                if val_summary["map"] >= best_mAp:
+                    self.save_checkpoint(val_summary["map"], "best.pt")
+            else:
+                self.save_checkpoint(val_summary["map"], "best.pt")
 
     def validation(self, loader: DataLoader):
         self.model.eval()
@@ -129,7 +147,7 @@ class SSDLiteContainer(AbstractModelContainer):
                 targets = [{k: v.to(self.device) for k, v in t.items()} for t in targets]
                 prediction: List[Dict[str, torch.Tensor]] = self.model(images)
                 mean_average_precision.update(prediction, targets)
-        summary = mean_average_precision.compute()
+            summary = mean_average_precision.compute()
         return summary
 
     def predict(self, images: List[torch.Tensor]):
@@ -144,6 +162,31 @@ class SSDLiteContainer(AbstractModelContainer):
                 if isinstance(module, k):
                     prune.l1_unstructured(module, "weight", amount=v)
                     prune.remove(module, "weight")
+
+    def save_checkpoint(self, mAp: float,
+                        filename: str = "latest.pt"):
+        saved_object = {
+            "model_state_dict": self.model.state_dict(),
+            "optimizer_state_dict": self.opt.state_dict(),
+            "mAp": mAp,
+        }
+        torch.save(saved_object, self.runtime_output_dir / filename)
+
+    def load_checkpoint(self,
+                        filename: str = "latest.pt"):
+        import traceback
+        loaded_object = torch.load(self.runtime_output_dir / filename)
+        try:
+            self.model.load_state_dict(loaded_object["model_state_dict"])
+            self.opt.load_state_dict(loaded_object["optimizer_state_dict"])
+        except:
+            self.logger.error("Error loading checkpoint")
+            self.logger.debug(traceback.format_exc())
+
+    def read_checkpoint(self, filename: str = "best.pt"):
+        if not (self.runtime_output_dir / filename).exists():
+            return None
+        return torch.load(self.runtime_output_dir / filename)
 
     def export_onnx(self):
         self.model.eval()

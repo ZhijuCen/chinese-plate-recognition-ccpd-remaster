@@ -1,6 +1,6 @@
 
 import data
-from model import KeypointRCNNContainer, optimizer_map
+from model import SSDLiteContainer, KeypointRCNNContainer, optimizer_map
 
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
@@ -38,7 +38,7 @@ def main(args: Namespace):
 
     optimizer_params = {str(s.split('=')[0]): eval(s.split('=')[1])
                         for s in args.optimizer_params}
-    model = KeypointRCNNContainer.new_model(
+    model = SSDLiteContainer.new_model(
         optimizer_map[args.optimizer], optimizer_params, "cuda")
     model.train(train_loader, args.epochs, val_loader)
     model.prune_model()
@@ -72,7 +72,7 @@ if __name__ == "__main__":
         help="Index mapping from val split index to index of datasets."
     )
     parser.add_argument(
-        "--optimizer", choices=["SGD", "Adam"], default="SGD",
+        "--optimizer", choices=["SGD", "Adam"], default="Adam",
         help="Optimizer for training."
     )
     parser.add_argument(
