@@ -11,6 +11,13 @@ import numpy as np
 from typing import Dict, List, Optional, Tuple
 
 
+def trim_bbox(img: np.ndarray, bbox: np.ndarray):
+    h, w, c = img.shape
+    bbox[:, [0, 2]] = np.clip(bbox[:, [0, 2]], 0, w)
+    bbox[:, [1, 3]] = np.clip(bbox[:, [1, 3]], 0, h)
+    return bbox
+
+
 class ImageDataset(Dataset):
 
     """
@@ -45,6 +52,7 @@ class ImageDataset(Dataset):
         img: np.ndarray = cv.cvtColor(img, cv.COLOR_BGR2RGB)
         labels: np.ndarray = self.labels[item]
         boxes: np.ndarray = self.boxes[item]
+        boxes = trim_bbox(img, boxes)
         boxes = np.concatenate((boxes, np.expand_dims(labels, 1)), axis=1)
         keypoints: np.ndarray = self.keypoints[item]
         keypoints, visibility, _ = np.split(keypoints, [2, 3], axis=2)
