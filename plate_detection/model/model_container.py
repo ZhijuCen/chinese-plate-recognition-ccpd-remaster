@@ -1,5 +1,11 @@
 
-from ..data import get_loader
+import sys
+try:
+    from ..data import get_loader
+except ValueError:
+    sys.path.append("..")
+    from data import get_loader
+
 
 import torch
 from torch import nn, optim
@@ -12,7 +18,6 @@ from torchmetrics.detection.map import MeanAveragePrecision
 
 from tqdm.auto import tqdm
 
-import sys
 import logging
 from datetime import datetime as dt
 from pathlib import Path
@@ -98,13 +103,14 @@ class SSDLiteContainer(AbstractModelContainer):
                    runtime_output_dir, use_checkpoint)
 
     def train(self, loader: DataLoader, epochs: int,
-              val_loader: Optional[DataLoader] = None):
+              val_loader: Optional[DataLoader] = None, patience: int = 0):
 
         if val_loader is None:
             val_ds = Subset(loader.dataset,
                             list(range(max(1, len(loader.dataset) // 10))))
             val_loader = get_loader(val_ds, 4, shuffle=False, num_workers=6)
 
+        waited_epochs = 0  # early stopping if waited >= patience.
         for e in tqdm(range(epochs), desc="Epoch: ", position=0):
             self.model.train()
             total_loss = 0.
@@ -134,6 +140,12 @@ class SSDLiteContainer(AbstractModelContainer):
                 best_mAp = best["mAp"]
                 if val_summary["map"] >= best_mAp:
                     self.save_checkpoint(val_summary["map"], "best.pt")
+                    waited_epochs = 0
+                else:
+                    waited_epochs += 1
+                    if patience > 0 and waited_epochs >= patience:
+                        self.logger.info("Early stopped.")
+                        break
             else:
                 self.save_checkpoint(val_summary["map"], "best.pt")
 
