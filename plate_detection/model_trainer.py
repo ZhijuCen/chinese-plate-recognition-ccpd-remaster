@@ -30,9 +30,10 @@ def main(args: Namespace):
     else:
         val_ds = None
 
-    train_loader = data.get_loader(train_ds, num_workers=6)
+    train_loader = data.get_loader(train_ds, args.batch_size, num_workers=6)
     if val_ds is not None:
-        val_loader = data.get_loader(val_ds, shuffle=False, num_workers=6)
+        val_loader = data.get_loader(val_ds, args.batch_size,
+                                     shuffle=False, num_workers=6)
     else:
         val_loader = None
 
@@ -40,7 +41,7 @@ def main(args: Namespace):
                         for s in args.optimizer_params}
     model = SSDLiteContainer.new_model(
         optimizer_map[args.optimizer], optimizer_params, "cuda")
-    model.train(train_loader, args.epochs, val_loader)
+    model.train(train_loader, args.epochs, val_loader, args.early_stopping)
     model.prune_model()
     model.export_onnx("export.onnx")
 
@@ -76,12 +77,21 @@ if __name__ == "__main__":
         help="Optimizer for training."
     )
     parser.add_argument(
-        "--optimizer-params", nargs="+", default=["lr=1e-3"],
+        "--optimizer-params", nargs="+", default=["lr=1e-4"],
         help="Parameters for optimizer."
     )
     parser.add_argument(
         "--epochs", type=int, default=50,
         help="Train epochs, default: %(default)s"
+    )
+    parser.add_argument(
+        "--batch-size", type=int, default=4,
+        help="Batch size for training, default: %(default)s"
+    )
+    parser.add_argument(
+        "--early-stopping", type=int, default=0,
+        help=("Early stopping, set to p <= 0 will disable this,"
+              " positive value will be patience.")
     )
     parser.add_argument(
         "--annot-file", type=Path, default="../char-annotations.yaml",
