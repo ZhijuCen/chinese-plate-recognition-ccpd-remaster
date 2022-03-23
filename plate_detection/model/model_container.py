@@ -150,16 +150,20 @@ class SSDLiteContainer(AbstractModelContainer):
                 self.save_checkpoint(val_summary["map"], "best.pt")
 
     def validation(self, loader: DataLoader):
+        import time
         self.model.eval()
         mean_average_precision = MeanAveragePrecision()
-        mean_average_precision.to(self.device)
         with torch.no_grad():
             for images, targets in tqdm(loader, desc="Validating batch: "):
                 images = [i.to(self.device) for i in images]
                 targets = [{k: v.to(self.device) for k, v in t.items()} for t in targets]
                 prediction: List[Dict[str, torch.Tensor]] = self.model(images)
                 mean_average_precision.update(prediction, targets)
-            summary = mean_average_precision.compute()
+        # TODO: Fix performance issue when computing
+        begin = time.time()
+        summary = mean_average_precision.compute()
+        end = time.time()
+        self.logger.debug(f"Computed mAp in {(end - begin):.2f} sec.")
         return summary
 
     def predict(self, images: List[torch.Tensor]):
