@@ -1,5 +1,5 @@
 
-from .augmentation import default_keypoint_transform
+from .augmentation import default_keypoint_transform, identity_keypoint_transform
 
 import torch
 from torch.utils.data import Dataset, DataLoader, ConcatDataset
@@ -100,8 +100,11 @@ class ImageCollate(object):
 
 
 def get_dataset(img_paths, labels, boxes, keypoints,
-                transform_apply_p=0.5) -> ImageDataset:
-    transform = default_keypoint_transform(p=transform_apply_p)
+                transform_apply_p=0.5, is_val=False) -> ImageDataset:
+    if is_val:
+        transform = identity_keypoint_transform()
+    else:
+        transform = default_keypoint_transform(p=transform_apply_p)
     return ImageDataset(img_paths, labels, boxes, keypoints, transform)
 
 

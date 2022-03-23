@@ -4,5 +4,6 @@ python model_trainer.py --dataset "../linked_datasets/CCPD2019" "../linked_datas
 --train-mapping 0 1 \
 --val-splits "../third_party/CCPD/split/val.txt" "../third_party/CCPD/split/green_val.txt" \
 --val-mapping 0 1 \
---batch-size 16 \
---early-stopping 5
+--batch-size 32 \
+--early-stopping 5 \
+--debug

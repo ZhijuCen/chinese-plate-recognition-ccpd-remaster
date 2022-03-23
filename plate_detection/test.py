@@ -71,7 +71,10 @@ class TestTrainingSSDLite(unittest.TestCase):
             1, self.annot_obj)
         dataset = get_dataset(img_paths, labels, boxes, kps, 1.)
         dataset = concat_ds(dataset, dataset)
-        self.data_loader = get_loader(dataset)
+        dataset_val = get_dataset(img_paths, labels, boxes, kps, is_val=True)
+        dataset_val = concat_ds(*[dataset_val for _ in range(10)])
+        self.loader_train = get_loader(dataset, num_workers=6)
+        self.loader_val = get_loader(dataset_val, shuffle=False)
         self.model = SSDLiteContainer.new_model(device="cuda", runtime_output_dir="output-test")
 
     def tearDown(self) -> None:
@@ -81,17 +84,18 @@ class TestTrainingSSDLite(unittest.TestCase):
         raised = False
         msg = ""
         try:
-            self.model.train(self.data_loader, 4)
+            self.model.train(self.loader_train, 4, self.loader_val)
+            self.model.load_checkpoint()
             self.model.prune_model()
             self.model.export_onnx()
 
             fhdlr: logging.FileHandler = self.model.logger.handlers[0]
 
-            Path(fhdlr.baseFilename).unlink(missing_ok=True)
-            (self.model.runtime_output_dir / "best.pt").unlink(missing_ok=True)
-            (self.model.runtime_output_dir / "latest.pt").unlink(missing_ok=True)
-            (self.model.runtime_output_dir / "model.onnx").unlink(missing_ok=True)
-            self.model.runtime_output_dir.rmdir()
+            # Path(fhdlr.baseFilename).unlink(missing_ok=True)
+            # (self.model.runtime_output_dir / "best.pt").unlink(missing_ok=True)
+            # (self.model.runtime_output_dir / "latest.pt").unlink(missing_ok=True)
+            # (self.model.runtime_output_dir / "model.onnx").unlink(missing_ok=True)
+            # self.model.runtime_output_dir.rmdir()
         except:
             msg = traceback.format_exc()
             raised = True
