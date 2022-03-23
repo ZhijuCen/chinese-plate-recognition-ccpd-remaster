@@ -1,7 +1,13 @@
 
+import sys
+
 from .augmentation import *
 from .dataset import *
-from .filename_parser import *
+try:
+    from ...utils.filename_parser import *
+except ValueError:
+    sys.path.append("../..")
+    from utils.filename_parser import *
 
 import numpy as np
 
