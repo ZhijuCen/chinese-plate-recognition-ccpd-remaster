@@ -152,7 +152,10 @@ class SSDLiteContainer(AbstractModelContainer):
     def validation(self, loader: DataLoader):
         import time
         self.model.eval()
-        mean_average_precision = MeanAveragePrecision()
+        mean_average_precision = MeanAveragePrecision(
+            iou_thresholds=[.5, .75],
+            rec_thresholds=torch.linspace(0., 1., round(1. / 0.1) + 1).tolist()
+        )
         with torch.no_grad():
             for images, targets in tqdm(loader, desc="Validating batch: "):
                 images = [i.to(self.device) for i in images]
