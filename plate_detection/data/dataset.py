@@ -99,7 +99,8 @@ class ImageCollate(object):
         return
 
 
-def get_dataset(img_paths, labels, boxes, keypoints,
+def get_dataset(img_paths: List[str], labels: List[np.ndarray],
+                boxes: List[np.ndarray], keypoints: List[np.ndarray],
                 transform_apply_p=0.5, is_val=False) -> ImageDataset:
     if is_val:
         transform = identity_keypoint_transform()
