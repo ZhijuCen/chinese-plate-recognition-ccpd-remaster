@@ -55,6 +55,8 @@ def to_bbox_cropped_dataset(
             cropped_image_filename = f"{img_index:08d}-{obj_index:03d}.jpg"
             cropped_image_filepath = dest_img_dir / cropped_image_filename
             cv.imwrite(str(cropped_image_filepath), cropped_image)
+
+            # append sample
             export_object["image_paths"].append(
                 "/".join(cropped_image_filepath.parts[-1-depth:]))
             export_object["keypoints"].append(kp.tolist())
