@@ -7,3 +7,6 @@ linked_datasets/*
 
 !.keep
 !README.md
+
+# IDE
+.idea
