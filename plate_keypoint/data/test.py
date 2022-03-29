@@ -1,4 +1,3 @@
-
 from . import (load_char_annots, parse_split_file_to_arrays,
                to_bbox_cropped_dataset, get_dataset_from_yaml)
 
@@ -50,6 +49,7 @@ class TestGetDataset(unittest.TestCase):
             msg = traceback.format_exc()
             raised = True
         self.assertFalse(raised, msg)
+
 
 if __name__ == "__main__":
     unittest.main()

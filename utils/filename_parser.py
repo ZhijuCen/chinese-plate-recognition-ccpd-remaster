@@ -2,10 +2,10 @@
 import numpy as np
 from typing import Any, Dict, List, Tuple, Union, Optional
 from pathlib import Path
-from os import path
+import os.path
 
 
-def load_char_annots(path: str) -> dict:
+def load_char_annots(path: Union[str, Path]) -> dict:
     import yaml
     with open(path, "r") as f:
         obj: dict = yaml.safe_load(f)
@@ -34,13 +34,14 @@ def remap_ccpd_lp_annot(
 def parse_ccpd_filename(
     filepath: str,
     remap_lp_annot: Optional[Dict[str, Any]] = None,
+    length_of_lp_numbers: int = 8,
+    pad_value_for_lp: int = 0,
     bbox_from_kp: bool = True,
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, Dict[str, Any]]:
-    filename = path.split(filepath)[-1]
+    filename = os.path.split(filepath)[-1]
     stem = filename.rsplit(".")[-2]
     (area, tilt, bbox, keypoints, lp_number,
-     brightness, blurriness
-    ) = stem.split("-")
+     brightness, blurriness) = stem.split("-")
     area = float(f"0.{area}")
     tilt = np.array([v for v in tilt.split("_")], dtype=np.int64)
     keypoints = np.array([[s.split("&") for s in keypoints.split("_")]], dtype=np.int64)
@@ -63,7 +64,10 @@ def parse_ccpd_filename(
             lp_number,
             remap_lp_annot["ccpd_char_annotations"],
             remap_lp_annot["char_annotations"])
-    lp_number = np.asarray(lp_number, dtype=int)
+    len_lp = len(lp_number)
+    for _ in range(len_lp, length_of_lp_numbers):
+        lp_number.append(pad_value_for_lp)
+    lp_number = np.array([lp_number], dtype=np.int64)
 
     return (
         bbox, keypoints, lp_number,
@@ -76,17 +80,26 @@ def parse_split_file_to_arrays(
     dataset_dir: Union[Path, str],
     split_file_path: Union[Path, str],
     label: int = 1,
+    length_of_lp_numbers: int = 8,
+    pad_value_for_lp: int = 0,
     remap_lp_annot: Optional[Dict[str, Any]] = None,
     bbox_from_kp: bool = True,
-) -> Tuple[List[str],
-    List[np.ndarray], List[np.ndarray], List[np.ndarray], List[np.ndarray]]:
+) -> Tuple[
+        List[str],
+        List[np.ndarray], List[np.ndarray],
+        List[np.ndarray], List[np.ndarray]]:
     """_summary_
 
     Args:
         dataset_dir (Union[Path, str]): _description_
         split_file_path (Union[Path, str]): _description_
-        label (int, optional): _description_. Defaults to 1.
-        remap_lp_annot (Optional[Dict[str, Any]], optional): _description_. Defaults to None.
+        label (int, optional):
+            Label for object(license plate).
+            Defaults to 1(while background is 0).
+        length_of_lp_numbers (int, optional):
+        pad_value_for_lp (int, optional):
+        remap_lp_annot (Optional[Dict[str, Any]], optional):
+            _description_. Defaults to None.
         bbox_from_kp (bool, optional): _description_
 
     Returns:
@@ -103,7 +116,8 @@ def parse_split_file_to_arrays(
             img_path = (dataset_dir / line.rstrip("\r\n ")).resolve()
             img_path = str(img_path)
             bbox, kp, lp, _ = parse_ccpd_filename(
-                img_path, remap_lp_annot, bbox_from_kp)
+                img_path, remap_lp_annot,
+                length_of_lp_numbers, pad_value_for_lp, bbox_from_kp)
             img_paths.append(img_path)
             boxes.append(bbox)
             labels.append(np.full((bbox.shape[0],), label))

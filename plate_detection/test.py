@@ -21,7 +21,7 @@ class TestTrainingKeypointRCNN(unittest.TestCase):
         img_paths, boxes, labels, kps, lpas = parse_split_file_to_arrays(
             self.test_suite_path,
             self.test_filelist_path,
-            1, self.annot_obj)
+            1, remap_lp_annot=self.annot_obj)
         dataset = get_dataset(img_paths, labels, boxes, kps, 1.)
         dataset = concat_ds(dataset, dataset)
         self.data_loader = get_loader(dataset)
@@ -68,7 +68,7 @@ class TestTrainingSSDLite(unittest.TestCase):
         img_paths, boxes, labels, kps, lpas = parse_split_file_to_arrays(
             self.test_suite_path,
             self.test_filelist_path,
-            1, self.annot_obj)
+            1, remap_lp_annot=self.annot_obj)
         dataset = get_dataset(img_paths, labels, boxes, kps, 1.)
         dataset = concat_ds(dataset, dataset)
         dataset_val = get_dataset(img_paths, labels, boxes, kps, is_val=True)
