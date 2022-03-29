@@ -1,20 +1,20 @@
 image_paths:
-- ccpd_base/00000000-000.jpg
-- ccpd_base/00000001-000.jpg
-- ccpd_base/00000002-000.jpg
-- ccpd_base/00000003-000.jpg
-- ccpd_base/00000004-000.jpg
-- ccpd_base/00000005-000.jpg
-- ccpd_base/00000006-000.jpg
-- ccpd_base/00000007-000.jpg
-- ccpd_base/00000008-000.jpg
-- ccpd_base/00000009-000.jpg
-- ccpd_base/00000010-000.jpg
-- ccpd_base/00000011-000.jpg
-- ccpd_base/00000012-000.jpg
-- ccpd_base/00000013-000.jpg
-- ccpd_base/00000014-000.jpg
-- ccpd_base/00000015-000.jpg
+- ccpd_base/kp-00000000-000.jpg
+- ccpd_base/kp-00000001-000.jpg
+- ccpd_base/kp-00000002-000.jpg
+- ccpd_base/kp-00000003-000.jpg
+- ccpd_base/kp-00000004-000.jpg
+- ccpd_base/kp-00000005-000.jpg
+- ccpd_base/kp-00000006-000.jpg
+- ccpd_base/kp-00000007-000.jpg
+- ccpd_base/kp-00000008-000.jpg
+- ccpd_base/kp-00000009-000.jpg
+- ccpd_base/kp-00000010-000.jpg
+- ccpd_base/kp-00000011-000.jpg
+- ccpd_base/kp-00000012-000.jpg
+- ccpd_base/kp-00000013-000.jpg
+- ccpd_base/kp-00000014-000.jpg
+- ccpd_base/kp-00000015-000.jpg
 keypoints:
 - - - 292.0
     - 75.0
