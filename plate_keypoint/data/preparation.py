@@ -52,7 +52,7 @@ def to_bbox_cropped_dataset(
             kp: np.ndarray
             kp, _ = np.split(kp, [2,], axis=1)
             cropped_image = image[y_min:y_max, x_min:x_max].copy()
-            cropped_image_filename = f"{img_index:08d}-{obj_index:03d}.jpg"
+            cropped_image_filename = f"kp-{img_index:08d}-{obj_index:03d}.jpg"
             cropped_image_filepath = dest_img_dir / cropped_image_filename
             cv.imwrite(str(cropped_image_filepath), cropped_image)
 
