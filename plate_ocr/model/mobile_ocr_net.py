@@ -294,8 +294,8 @@ class MobileOCRNet(nn.Module):
     def forward(self, x):
         x = self.features(x)
         x = self.features_head(x)
-        t, n, c, _ = x.shape
-        x = torch.reshape(x, (t, n, c))
+        t, n, c, h = x.shape
+        x = torch.reshape(x, (t, n, c*h))
         x, h_n = self.rnn(x)
         out = self.head(x)
         return out

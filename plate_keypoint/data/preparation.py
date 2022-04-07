@@ -37,14 +37,14 @@ def to_bbox_cropped_dataset(
     }
 
     for img_index, (img_path, bounding_boxes, kps) in enumerate(
-        zip(img_paths, boxes, keypoints)):
+            zip(img_paths, boxes, keypoints)):
         image: np.ndarray = cv.imread(img_path)
         img_path = Path(img_path)
         subdir_parts = img_path.parts[-1-depth:-1]
         dest_img_dir = destination_dir.joinpath(*subdir_parts).resolve()
         dest_img_dir.mkdir(parents=True, exist_ok=True)
         for obj_index, (bounding_box, kp) in enumerate(
-            zip(bounding_boxes, kps)):
+                zip(bounding_boxes, kps)):
             x_min, y_min, x_max, y_max = bounding_box
             # adjust offset of keypoints
             kp[:, 0] = kp[:, 0] - x_min

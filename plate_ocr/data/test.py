@@ -1,6 +1,7 @@
 
 from . import parse_split_file_to_arrays, load_char_annots
 from .preparation import to_keypoints_transformed_dataset
+from .dataset import OCRDataset
 
 import unittest
 import traceback
@@ -27,7 +28,28 @@ class TestToKeypointsTransformedDataset(unittest.TestCase):
                 self.img_paths, self.kps, self.lp_char_annots,
                 self.test_suite_dir, "val_ocr_for_test", depth=1
             )
-        except:
+        except Exception:
+            msg = traceback.format_exc()
+            raised = True
+        self.assertFalse(raised, msg)
+
+
+class TestOCRDataset(unittest.TestCase):
+
+    def setUp(self) -> None:
+        root_dir = Path(__file__).parents[2]
+        self.test_suite_dir = root_dir / "test_suite"
+
+    def test_iter_loader_noerror(self):
+        raised = False
+        msg = ""
+        try:
+            loader = OCRDataset.from_yaml(
+                self.test_suite_dir / "val_ocr_for_test.yaml",
+                self.test_suite_dir).to_dataloader(16)
+            for img, target in loader:
+                pass
+        except Exception:
             msg = traceback.format_exc()
             raised = True
         self.assertFalse(raised, msg)
