@@ -30,12 +30,12 @@ class ImageDataset(Dataset):
     """
 
     def __init__(self,
-        img_paths: List[str],
-        labels: List[np.ndarray],
-        boxes: List[np.ndarray],
-        keypoints: List[np.ndarray],
-        transform: Optional[A.Compose] = None
-        ):
+                 img_paths: List[str],
+                 labels: List[np.ndarray],
+                 boxes: List[np.ndarray],
+                 keypoints: List[np.ndarray],
+                 transform: Optional[A.Compose] = None
+                 ):
         super().__init__()
 
         self.img_paths = img_paths
@@ -115,8 +115,8 @@ def concat_ds(*ds: Dataset) -> ConcatDataset:
 
 
 def get_loader(
-    dataset,
-    batch_size=4, shuffle=True, num_workers=0) -> DataLoader:
+        dataset,
+        batch_size=4, shuffle=True, num_workers=0) -> DataLoader:
     loader = DataLoader(dataset, batch_size,
                         shuffle=shuffle, num_workers=num_workers,
                         collate_fn=ImageCollate.collate_fn)
