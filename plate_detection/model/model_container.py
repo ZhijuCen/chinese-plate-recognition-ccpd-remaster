@@ -5,7 +5,11 @@ try:
 except ValueError:
     sys.path.append("..")
     from data import get_loader
-
+try:
+    from ...utils.abstract_model_container import AbstractModelContainer
+except ValueError:
+    sys.path.append("../..")
+    from utils.abstract_model_container import AbstractModelContainer
 
 import torch
 from torch import nn, optim
@@ -22,7 +26,6 @@ import logging
 from datetime import datetime as dt
 from pathlib import Path
 from typing import Optional, Union, Type, Any, List, Dict
-from abc import ABC
 
 
 optimizer_map = {
@@ -38,25 +41,12 @@ def init_logger(name: str, path: Union[str, Path]):
     return logger
 
 
-class AbstractModelContainer(ABC):
-
-    def train(self, *args, **kwargs): return
-
-    def validation(self, *args, **kwargs): return
-
-    def predict(self, *args, **kwargs) -> Any: return
-
-    def prune_model(self, amount_map: Dict[Type[nn.Module], float]) -> None: return
-
-    def export_onnx(self, path: Union[Path, str]): return
-
-
 class SSDLiteContainer(AbstractModelContainer):
 
     def __init__(
         self, model: nn.Module,
         opt: Type[optim.Optimizer] = optim.Adam,
-        opt_params: Dict[str, Any] = dict(lr=1e-4),
+        opt_params: Dict[str, Any] = None,
         device: Union[torch.device, str, int] = "cpu",
         dtype: torch.dtype = torch.float32,
         runtime_output_dir: Union[str, Path, None] = None,
@@ -68,14 +58,13 @@ class SSDLiteContainer(AbstractModelContainer):
         self.dtype = dtype
         self.model = model.to(device=self.device, dtype=self.dtype)
         self.opt_params = opt_params
+        if self.opt_params is None:
+            self.opt_params: Dict[str, Any] = dict(lr=1e-4)
         self.opt = opt(self.model.parameters(), **self.opt_params)
 
         self.runtime_output_dir = runtime_output_dir
         if self.runtime_output_dir is None:
-            init_datetime = tuple(dt.now().timetuple())[:6]
-            self.runtime_output_dir: Path = Path(
-                ("output-{:04d}{:02d}{:02d}"
-                 "{:02d}{:02d}{:02d}").format(*init_datetime))
+            self.runtime_output_dir: Path = Path("detection_rt_tmp")
         else:
             self.runtime_output_dir: Path = Path(self.runtime_output_dir)
             if load_checkpoint_on_init:
@@ -121,7 +110,7 @@ class SSDLiteContainer(AbstractModelContainer):
                 losses: Dict[str, torch.FloatTensor] = self.model(images, targets)
                 self.opt.zero_grad()
                 # TODO: Optional: decide whether implement loss weights w.r.t keys
-                summed_loss = 0.
+                summed_loss = torch.tensor(0.)
                 for _, v in losses.items():
                     summed_loss += v
                 summed_loss.backward()
