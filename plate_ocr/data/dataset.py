@@ -36,11 +36,6 @@ class OCRDataset(Dataset):
     def __len__(self):
         return len(self.img_paths)
 
-    def to_dataloader(self, batch_size: int = 16, num_workers: int = 4):
-        return DataLoader(self,
-                          batch_size=batch_size,
-                          num_workers=num_workers)
-
     @classmethod
     def from_yaml(cls, yaml_path, data_dir: Union[Path, str]):
         import yaml
@@ -54,3 +49,9 @@ class OCRDataset(Dataset):
         for target in yaml_object["char_labels"]:
             targets.append(np.array(target, dtype=np.int64))
         return cls(image_paths, targets)
+
+
+def to_dataloader(dataset, batch_size: int = 16, num_workers: int = 4):
+    return DataLoader(dataset,
+                      batch_size=batch_size,
+                      num_workers=num_workers)

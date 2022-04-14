@@ -1,7 +1,7 @@
 
 from . import parse_split_file_to_arrays, load_char_annots
 from .preparation import to_keypoints_transformed_dataset
-from .dataset import OCRDataset
+from .dataset import OCRDataset, to_dataloader
 
 import unittest
 import traceback
@@ -44,9 +44,10 @@ class TestOCRDataset(unittest.TestCase):
         raised = False
         msg = ""
         try:
-            loader = OCRDataset.from_yaml(
+            dataset = OCRDataset.from_yaml(
                 self.test_suite_dir / "val_ocr_for_test.yaml",
-                self.test_suite_dir).to_dataloader(16)
+                self.test_suite_dir)
+            loader = to_dataloader(dataset)
             for img, target in loader:
                 pass
         except Exception:
