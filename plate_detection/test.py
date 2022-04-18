@@ -75,7 +75,7 @@ class TestTrainingSSDLite(unittest.TestCase):
         dataset_val = concat_ds(*[dataset_val for _ in range(10)])
         self.loader_train = get_loader(dataset, num_workers=6)
         self.loader_val = get_loader(dataset_val, shuffle=False, num_workers=6)
-        self.model = SSDLiteContainer.new_model(device="cuda", runtime_output_dir="output-test")
+        self.model = SSDLiteContainer.new_model(device="cuda") 
 
     def tearDown(self) -> None:
         pass

@@ -1,6 +1,7 @@
 
 from .model import default_keypoint_model_224
 from .data import get_dataset_from_yaml
+from .model.model_container import KeypointNetContainer
 
 import tensorflow as tf
 
@@ -40,6 +41,32 @@ class TestDefaultKeypointModel224(unittest.TestCase):
                 self.test_suite_dir / "val_kp_for_test.yaml", is_val=True)
             model = default_keypoint_model_224()
             model.fit(ds, epochs=200, validation_data=ds_val, validation_freq=10)
+        except:
+            msg = traceback.format_exc()
+            raised = True
+        self.assertFalse(raised, msg)
+
+
+class TestDefaultKeypointNetContainer(unittest.TestCase):
+    
+    def setUp(self) -> None:
+        self.test_suite_dir = Path(__file__).parents[1] / "test_suite"
+
+    def test_default_keypoint_net_container_no_error(self):
+        raised = False
+        msg = ""
+        try:
+            ds = get_dataset_from_yaml(
+                self.test_suite_dir,
+                self.test_suite_dir / "val_kp_for_test.yaml")
+            ds_val = get_dataset_from_yaml(
+                self.test_suite_dir,
+                self.test_suite_dir / "val_kp_for_test.yaml", is_val=True)
+            model_container = KeypointNetContainer()
+            model_container.train(ds, 50, ds_val)
+            model_container.validation(ds_val)
+            model_container.predict(ds)
+            model_container.export_onnx(model_container.runtime_output_dir / "export.onnx")
         except:
             msg = traceback.format_exc()
             raised = True
