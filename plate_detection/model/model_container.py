@@ -18,7 +18,7 @@ from torch.utils.data import DataLoader, Subset
 from torchvision.models.detection import (keypointrcnn_resnet50_fpn,
                                           ssdlite320_mobilenet_v3_large)
 
-from torchmetrics.detection.map import MeanAveragePrecision
+from torchmetrics.detection.mean_ap import MeanAveragePrecision
 
 from tqdm.auto import tqdm
 
@@ -110,7 +110,7 @@ class SSDLiteContainer(AbstractModelContainer):
                 losses: Dict[str, torch.FloatTensor] = self.model(images, targets)
                 self.opt.zero_grad()
                 # TODO: Optional: decide whether implement loss weights w.r.t keys
-                summed_loss = torch.tensor(0.)
+                summed_loss = torch.tensor(0., device=self.device)
                 for _, v in losses.items():
                     summed_loss += v
                 summed_loss.backward()
