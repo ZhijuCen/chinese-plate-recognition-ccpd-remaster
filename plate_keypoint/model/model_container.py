@@ -11,6 +11,7 @@ from .models import default_keypoint_model_224
 import tensorflow as tf
 import tf2onnx
 from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping, Callback
+import numpy as np
 
 from typing import Union
 from pathlib import Path
@@ -18,13 +19,18 @@ from pathlib import Path
 
 class ToOnnxCallback(Callback):
 
-    def __init__(self, onnx_path: Union[Path, str]):
-        self.onnx_path = str(onnx_path)
+    def __init__(self, onnx_dir: Union[Path, str]):
+        self.onnx_dir: Path = Path(onnx_dir)
+        self.best_val_loss = np.inf
     
     def on_epoch_end(self, epoch, logs=None):
-        example_input = tf.random.uniform((1, 224, 224, 3))
-        tf2onnx.convert.from_keras(self.model, example_input,
-                                   output_path=self.onnx_path)
+        example_inputs = [tf.TensorSpec((None, 224, 224, 3), dtype=tf.float32)]
+        tf2onnx.convert.from_keras(self.model, example_inputs,
+                                   output_path=self.onnx_dir / "latest.onnx")
+        if logs["val_loss"] <= self.best_val_loss:
+            self.best_val_loss = logs["val_loss"]
+            tf2onnx.convert.from_keras(self.model, example_inputs,
+                                       output_path=self.onnx_dir / "best.onnx")
         return super().on_epoch_end(epoch, logs)
 
 
@@ -43,15 +49,19 @@ class KeypointNetContainer(AbstractModelContainer):
             ModelCheckpoint(self.ckpt_path,
                             save_best_only=True),
             EarlyStopping(patience=5),
-            ToOnnxCallback(self.runtime_output_dir / "latest.onnx"),
+            ToOnnxCallback(self.runtime_output_dir),
         ]
     
     def train(self,
               train_dataset: tf.data.Dataset,
               epochs: int,
               val_dataset: tf.data.Dataset = None):
+        validation_split = 0.
+        if val_dataset is None:
+            validation_split = 0.2
         self.model.fit(train_dataset,
                        epochs=epochs,
+                       validation_split=validation_split,
                        validation_data=val_dataset,
                        callbacks=self.callbacks)
         self.model.load_weights(self.ckpt_path)
@@ -63,6 +73,6 @@ class KeypointNetContainer(AbstractModelContainer):
         return self.model.predict(x)
     
     def export_onnx(self, path: Union[Path, str]):
-        example_input = tf.random.uniform((1, 224, 224, 3))
-        tf2onnx.convert.from_keras(self.model, example_input,
+        example_inputs = [tf.TensorSpec((None, 224, 224, 3), dtype=tf.float32)]
+        tf2onnx.convert.from_keras(self.model, example_inputs,
                                    output_path=str(path))

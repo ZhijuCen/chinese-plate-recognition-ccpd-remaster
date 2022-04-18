@@ -4,6 +4,7 @@ linked_datasets/*
 *.log
 *.pt
 *.onnx
+*.hdf5
 
 !.keep
 !README.md
