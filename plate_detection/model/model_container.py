@@ -7,9 +7,11 @@ except ValueError:
     from data import get_loader
 try:
     from ...utils.abstract_model_container import AbstractModelContainer
+    from ...utils.logger import init_logger
 except ValueError:
     sys.path.append("../..")
     from utils.abstract_model_container import AbstractModelContainer
+    from utils.logger import init_logger
 
 import torch
 from torch import nn, optim
@@ -22,8 +24,6 @@ from torchmetrics.detection.mean_ap import MeanAveragePrecision
 
 from tqdm.auto import tqdm
 
-import logging
-from datetime import datetime as dt
 from pathlib import Path
 from typing import Optional, Union, Type, Any, List, Dict
 
@@ -32,13 +32,6 @@ optimizer_map = {
     "SGD": torch.optim.SGD,
     "Adam": torch.optim.Adam,
 }
-
-
-def init_logger(name: str, path: Union[str, Path]):
-    logger = logging.Logger(name)
-    logger.addHandler(logging.FileHandler(str(path)))
-    logger.addHandler(logging.StreamHandler(sys.stdout))
-    return logger
 
 
 class SSDLiteContainer(AbstractModelContainer):
@@ -202,7 +195,6 @@ class SSDLiteContainer(AbstractModelContainer):
         input_names = ["image"]
         output_names = ["outputs"]
         example_input = [torch.rand(3, 320, 320), torch.rand(3, 480, 640)]
-        # TODO: Optional: Find out why the onnx model accepts 3-dim input.
         torch.onnx.export(
             self.model, example_input,
             str(self.runtime_output_dir / "model.onnx"),
@@ -233,13 +225,9 @@ class KeypointRCNNContainer(AbstractModelContainer):
         self.opt_params = opt_params
         self.opt = opt(self.model.parameters(), **self.opt_params)
 
-        # TODO: Required: Move to function or method
-        self.logger = logging.Logger(self.__class__)
-        fhdlr = logging.FileHandler(
-            str(Path(__file__).parents[1].joinpath("logs/model_container.log")))
-        shdlr = logging.StreamHandler(sys.stdout)
-        self.logger.addHandler(fhdlr)
-        self.logger.addHandler(shdlr)
+        self.logger = init_logger(
+            self.__class__,
+            Path(__file__).parents[1] / "logs" / "logs.log")
         self.logger.warn("Training with KeypointRCNN will be too slow.")
 
     @classmethod
