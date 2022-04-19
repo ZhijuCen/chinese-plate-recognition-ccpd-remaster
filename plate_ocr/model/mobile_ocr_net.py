@@ -285,10 +285,11 @@ class MobileOCRNet(nn.Module):
                           bidirectional=bidirectional, batch_first=False)
 
         self.head = nn.Sequential(
-            nn.Dropout(inplace=True),
+            nn.Dropout(),
             nn.Linear(hidden_size_rnn * directions, 128),
-            nn.Dropout(inplace=True),
-            nn.Linear(128, self.n_classes)
+            nn.Dropout(),
+            nn.Linear(128, self.n_classes),
+            nn.LogSoftmax(dim=2),
         )
 
     def forward(self, x):

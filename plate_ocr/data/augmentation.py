@@ -2,7 +2,7 @@
 import albumentations as A
 
 
-def default_transform(image_size=(224, 64)) -> A.Compose:
+def default_transform(image_size=(224, 64), is_val=False) -> A.Compose:
     """A default image transformation
 
     Args:
@@ -11,11 +11,14 @@ def default_transform(image_size=(224, 64)) -> A.Compose:
         albumentations.Compose: requires image.dtype is np.uint8 when called.
     """
     w, h = image_size
-    transform = A.Compose([
-        A.Resize(h, w),
-        A.RandomBrightnessContrast(),
-        A.InvertImg(),
-        A.ToGray(),
-        A.Affine(p=0.1),
-    ])
+    if is_val:
+        transform = A.Compose([A.Resize(h, w)])
+    else:
+        transform = A.Compose([
+            A.Resize(h, w),
+            A.RandomBrightnessContrast(p=0.2),
+            A.InvertImg(p=0.5),
+            A.ToGray(p=0.2),
+            A.Affine(p=0.1),
+        ])
     return transform
