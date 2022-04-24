@@ -1,5 +1,5 @@
 from . import (load_char_annots, parse_split_file_to_arrays,
-               to_bbox_cropped_dataset, get_dataset_from_yaml)
+               to_bbox_cropped_dataset, get_dataset_from_json)
 
 import unittest
 import traceback
@@ -38,13 +38,13 @@ class TestGetDataset(unittest.TestCase):
         root_dir = Path(__file__).parents[2]
         self.test_suite_dir = root_dir / "test_suite"
 
-    def test_get_dataset_from_yaml_noerror(self):
+    def test_get_dataset_from_json_noerror(self):
         raised = False
         msg = ""
         try:
-            ds = get_dataset_from_yaml(
+            ds = get_dataset_from_json(
                 self.test_suite_dir,
-                self.test_suite_dir / "val_kp_for_test.yaml")
+                self.test_suite_dir / "val_kp_for_test.json")
         except:
             msg = traceback.format_exc()
             raised = True

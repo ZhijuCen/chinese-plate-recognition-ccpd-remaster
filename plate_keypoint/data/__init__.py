@@ -8,4 +8,4 @@ except ValueError:
     from utils.filename_parser import parse_split_file_to_arrays, load_char_annots
 
 from .preparation import to_bbox_cropped_dataset
-from .dataset import get_dataset_from_yaml
+from .dataset import get_dataset_from_json

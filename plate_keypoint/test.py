@@ -1,6 +1,6 @@
 
 from .model import default_keypoint_model_224
-from .data import get_dataset_from_yaml
+from .data import get_dataset_from_json
 from .model.model_container import KeypointNetContainer
 
 import tensorflow as tf
@@ -33,10 +33,10 @@ class TestDefaultKeypointModel224(unittest.TestCase):
         raised = False
         msg = ""
         try:
-            ds = get_dataset_from_yaml(
+            ds = get_dataset_from_json(
                 self.test_suite_dir,
                 self.test_suite_dir / "val_kp_for_test.yaml")
-            ds_val = get_dataset_from_yaml(
+            ds_val = get_dataset_from_json(
                 self.test_suite_dir,
                 self.test_suite_dir / "val_kp_for_test.yaml", is_val=True)
             model = default_keypoint_model_224()
@@ -56,10 +56,10 @@ class TestDefaultKeypointNetContainer(unittest.TestCase):
         raised = False
         msg = ""
         try:
-            ds = get_dataset_from_yaml(
+            ds = get_dataset_from_json(
                 self.test_suite_dir,
                 self.test_suite_dir / "val_kp_for_test.yaml")
-            ds_val = get_dataset_from_yaml(
+            ds_val = get_dataset_from_json(
                 self.test_suite_dir,
                 self.test_suite_dir / "val_kp_for_test.yaml", is_val=True)
             model_container = KeypointNetContainer()

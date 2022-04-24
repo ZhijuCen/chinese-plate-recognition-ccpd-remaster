@@ -38,11 +38,11 @@ class OCRDataset(Dataset):
         return len(self.img_paths)
 
     @classmethod
-    def from_yaml(cls, yaml_path, data_dir: Union[Path, str]):
-        import yaml
+    def from_json(cls, json_path, data_dir: Union[Path, str]):
+        import json
         data_dir: Path = Path(data_dir)
-        with open(yaml_path, "r") as f:
-            yaml_object = yaml.safe_load(f.read())
+        with open(json_path, "r") as f:
+            yaml_object = json.load(f)
         image_paths = list()
         for rel_path in yaml_object["image_paths"]:
             image_paths.append(str((data_dir / rel_path).resolve()))

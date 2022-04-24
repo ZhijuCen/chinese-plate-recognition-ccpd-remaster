@@ -1,7 +1,7 @@
 
 import numpy as np
 import cv2 as cv
-import yaml
+import json
 
 from typing import List, Tuple, Union
 from pathlib import Path
@@ -44,7 +44,7 @@ def to_keypoints_transformed_dataset(
         [[0, 0], [w_dst, 0], [0, h_dst], [w_dst, h_dst]], dtype=np.float32
     )
 
-    split_filename = split_name + ".yaml"
+    split_filename = split_name + ".json"
     export_object = {
         "image_paths": list(),
         "char_labels": list(),
@@ -75,4 +75,4 @@ def to_keypoints_transformed_dataset(
             export_object["char_labels"].append(char_lb.tolist())
 
     with open(destination_dir / split_filename, "w") as f:
-        yaml.safe_dump(export_object, f)
+        json.dump(export_object, f)

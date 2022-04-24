@@ -44,8 +44,8 @@ class TestOCRDataset(unittest.TestCase):
         raised = False
         msg = ""
         try:
-            dataset = OCRDataset.from_yaml(
-                self.test_suite_dir / "val_ocr_for_test.yaml",
+            dataset = OCRDataset.from_json(
+                self.test_suite_dir / "val_ocr_for_test.json",
                 self.test_suite_dir)
             loader = to_dataloader(dataset)
             for img, target in loader:

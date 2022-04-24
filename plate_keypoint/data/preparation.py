@@ -1,7 +1,7 @@
 
 import numpy as np
 import cv2 as cv
-import yaml
+import json
 
 from typing import List, Union
 from pathlib import Path
@@ -30,7 +30,7 @@ def to_bbox_cropped_dataset(
     destination_dir = Path(destination_dir)
     destination_dir.mkdir(parents=True, exist_ok=True)
 
-    split_filename = split_name + ".yaml"
+    split_filename = split_name + ".json"
     export_object = {
         "image_paths": list(),
         "keypoints": list(),
@@ -62,4 +62,4 @@ def to_bbox_cropped_dataset(
             export_object["keypoints"].append(kp.tolist())
 
     with open(destination_dir / split_filename, "w") as f:
-        yaml.safe_dump(export_object, f)
+        json.dump(export_object, f)

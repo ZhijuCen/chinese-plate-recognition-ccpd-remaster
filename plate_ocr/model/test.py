@@ -58,7 +58,7 @@ class TestMobileOCRNetContainer(unittest.TestCase):
         raised = False
         msg = ""
         try:
-            ds = OCRDataset.from_yaml(
+            ds = OCRDataset.from_json(
                 self.test_suite_dir / "val_ocr_for_test.yaml", self.test_suite_dir)
             model = MobileOCRNetContainer(len(self.char_annots), "cuda")
             dummy_input = torch.randn((1, 3, 64, 224), device=model.device)
