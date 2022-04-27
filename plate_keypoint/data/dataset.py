@@ -68,11 +68,11 @@ def set_shapes(image: tf.Tensor, keypoints: tf.Tensor):
 
 
 def get_dataset_from_json(
-    dataset_dir: Union[str, Path], yaml_path: Union[str, Path],
+    dataset_dir: Union[str, Path], json_path: Union[str, Path],
     batch_size: int = 16, is_val: bool = False
 ) -> tf.data.Dataset:
     dataset_dir: Path = Path(dataset_dir)
-    with open(yaml_path, "r") as f:
+    with open(json_path, "r") as f:
         loaded_object: Dict[str, Any] = json.load(f)
     image_paths = np.asarray(
         [str(dataset_dir.joinpath(p).resolve())
